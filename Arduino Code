@@ -1,0 +1,53 @@
+#include<LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+int microphonePin = A0;
+int peakValue =0;
+int prevPeakValue = 0;
+int barWidth = 14;
+
+float filterConstant = 0.95;
+
+void setup() {
+ lcd.init();
+ lcd.backlight();
+}
+
+void loop() {
+ int audioValue = analogRead(microphonePin);
+
+ static float filteredSoundLevel = 3;
+ filteredSoundLevel = (filteredSoundLevel*filterConstant)+(audioValue*(1-filterConstant));
+ int soundLevel = map(filteredSoundLevel, 0, 1023, 3, 100);
+
+ if(filteredSoundLevel > peakValue){
+   peakValue = filteredSoundLevel;
+  }
+
+  lcd.setCursor(0, 0);
+  lcd.print("VU METRE: ");
+  lcd.print(soundLevel);
+  lcd.print("%");
+
+  lcd.setCursor(0, 1);
+  lcd.print("VU BAR: ");
+
+  int barValue = map(soundLevel, 3, 100, 0, barWidth);
+  for (int i = 0; i < barValue ; i++){
+     lcd.write(255);
+    }
+    for (int i = 0; i<barWidth - barValue; i++){
+       lcd.print(" ");
+       
+      }
+
+      if (filteredSoundLevel < prevPeakValue){
+         prevPeakValue = prevPeakValue - 1;
+        }
+        lcd.print("|");
+        delay(100);
+
+
+
+  
+}
